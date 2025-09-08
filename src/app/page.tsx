@@ -1,4 +1,4 @@
-import DashboardLayout from '@/components/DashboardLayout';
+import MainLayout from '@/components/MainLayout';
 
 // Componente de Card para métricas
 function MetricCard({ title, value, change, icon, color = 'blue' }: {
@@ -70,10 +70,10 @@ function EngagementChart() {
 
 export default function Dashboard() {
   return (
-    <DashboardLayout pageTitle="Insights">
+    <MainLayout pageTitle="Insights">
       <div className="animate-fadeIn">
        
       </div>
-    </DashboardLayout>
+    </MainLayout>
   );
 }

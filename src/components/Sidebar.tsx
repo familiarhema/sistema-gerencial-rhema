@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { usePermissions } from '@/hooks/usePermissions';
 import {
   Drawer,
   List,
@@ -27,42 +28,19 @@ import {
   Help,
 } from '@mui/icons-material';
 
-const menuItems = [
-  {
-    name: 'Dashboard',
-    path: '/',
-    icon: <Dashboard />
-  },
-  {
-    name: 'Analytics',
-    path: '/analytics',
-    icon: <Assessment />
-  },
-  {
-    name: 'Insights',
-    path: '/insights',
-    icon: <Bolt />
-  },
-  {
-    name: 'Usuários',
-    path: '/users',
-    icon: <Group />
-  },
-  {
-    name: 'Relatórios',
-    path: '/reports',
-    icon: <Description />
-  },
-  {
-    name: 'Configurações',
-    path: '/settings',
-    icon: <Settings />
-  }
-];
+const iconMap: { [key: string]: React.ReactElement } = {
+  'dashboard': <Dashboard />,
+  'analytics': <Assessment />,
+  'insights': <Bolt />,
+  'users': <Group />,
+  'reports': <Description />,
+  'settings': <Settings />
+};
 
 export default function Sidebar({ isCollapsed, onToggle }: { isCollapsed: boolean; onToggle: () => void }) {
   const pathname = usePathname();
   const drawerWidth = isCollapsed ? 64 : 256;
+  const { allowedMenuItems, loading } = usePermissions();
 
   return (
     <Drawer
@@ -88,13 +66,14 @@ export default function Sidebar({ isCollapsed, onToggle }: { isCollapsed: boolea
 
       {/* Navigation Menu */}
       <List>
-        {menuItems.map((item) => {
+        {allowedMenuItems.map((item) => {
           const isActive = pathname === item.path;
+          const icon = iconMap[item.id];
 
           return (
             <ListItem key={item.path} disablePadding>
               <Tooltip 
-                title={isCollapsed ? item.name : ''} 
+                title={isCollapsed ? item.label : ''}
                 placement="right"
                 arrow
               >
@@ -128,11 +107,11 @@ export default function Sidebar({ isCollapsed, onToggle }: { isCollapsed: boolea
                       color: isActive ? 'white' : 'text.secondary',
                     }}
                   >
-                    {item.icon}
+                    {iconMap[item.id]}
                   </ListItemIcon>
                   {!isCollapsed && (
-                    <ListItemText 
-                      primary={item.name}
+                    <ListItemText
+                      primary={item.label}
                       primaryTypographyProps={{
                         fontSize: '0.875rem',
                         fontWeight: 500,

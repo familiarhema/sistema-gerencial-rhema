@@ -4,13 +4,14 @@ import { ReactNode, useState } from 'react';
 import { Box, CssBaseline } from '@mui/material';
 import Header from './Header';
 import Sidebar from './Sidebar';
+import RouteGuard from './RouteGuard';
 
-interface DashboardLayoutProps {
+interface MainLayoutProps {
   children: ReactNode;
   pageTitle: string;
 }
 
-export default function DashboardLayout({ children, pageTitle }: DashboardLayoutProps) {
+export default function MainLayout({ children, pageTitle }: MainLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const drawerWidth = sidebarCollapsed ? 64 : 256;
 
@@ -33,12 +34,14 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
         sx={{
           flexGrow: 1,
           p: 3,
-          mt: '64px', // altura do header
+          mt: '64px',
           ml: `${drawerWidth}px`,
           transition: 'margin-left 0.3s ease-in-out',
         }}
       >
-        {children}
+        <RouteGuard>
+          {children}
+        </RouteGuard>
       </Box>
     </Box>
   );
