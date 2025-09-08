@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   AppBar,
   Toolbar,
@@ -19,7 +19,7 @@ import {
   Lock,
   Logout,
 } from '@mui/icons-material';
-import { logout } from '@/services/auth';
+import { logout, getUserData } from '@/services/auth';
 
 interface HeaderProps {
   pageTitle: string;
@@ -27,7 +27,17 @@ interface HeaderProps {
 
 export default function Header({ pageTitle }: HeaderProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [userData, setUserData] = useState<any>(null);
   const open = Boolean(anchorEl);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const data = await getUserData();
+      setUserData(data);
+    };
+
+    fetchUserData();
+  }, []);
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -83,9 +93,9 @@ export default function Header({ pageTitle }: HeaderProps) {
         {/* Menu do Usuário */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Box sx={{ textAlign: 'right', mr: 1 }}>
-            <Typography variant="subtitle2">Kemito</Typography>
+            <Typography variant="subtitle2">{userData?.name || 'Usuário'}</Typography>
             <Typography variant="caption" color="text.secondary">
-              UX/UI Designer
+              {userData?.role?.name || 'Carregando...'}
             </Typography>
           </Box>
           <IconButton
@@ -105,7 +115,7 @@ export default function Header({ pageTitle }: HeaderProps) {
                 fontWeight: 500
               }}
             >
-              K
+              {userData?.name ? userData.name[0].toUpperCase() : 'U'}
             </Avatar>
           </IconButton>
         </Box>
@@ -135,9 +145,9 @@ export default function Header({ pageTitle }: HeaderProps) {
           anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
         >
           <Box sx={{ px: 2, py: 1 }}>
-            <Typography variant="subtitle2">Kemito</Typography>
+            <Typography variant="subtitle2">{userData?.name || 'Usuário'}</Typography>
             <Typography variant="caption" color="text.secondary">
-              kemito@rhema.com
+              {userData?.email || 'carregando@rhema.com'}
             </Typography>
           </Box>
           <Divider />

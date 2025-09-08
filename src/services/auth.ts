@@ -1,5 +1,15 @@
 import { fetchApi } from './api';
 
+interface UserData {
+  email: string;
+  name: string;
+  sub: string;
+  role: {
+    id: string;
+    name: string;
+  };
+}
+
 interface LoginResponse {
   success: boolean;
   error?: string;
@@ -45,5 +55,15 @@ export async function isAuthenticated() {
     return response.data?.success || false;
   } catch {
     return false;
+  }
+}
+
+export async function getUserData(): Promise<UserData | null> {
+  try {
+    const response = await fetchApi<{ success: boolean; user?: UserData }>('auth/verify');
+    return response.data?.user || null;
+  } catch (error) {
+    console.error('Erro ao obter dados do usuário:', error);
+    return null;
   }
 }
