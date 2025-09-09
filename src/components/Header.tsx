@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import {
   AppBar,
   Toolbar,
@@ -20,6 +21,7 @@ import {
   Logout,
 } from '@mui/icons-material';
 import { logout, getUserData } from '@/services/auth';
+import Image from 'next/image';
 
 interface HeaderProps {
   pageTitle: string;
@@ -64,7 +66,8 @@ export default function Header({ pageTitle }: HeaderProps) {
       <Toolbar>
         {/* Logo e Título */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Box 
+         <Image src="/logo-rhema-black.png" alt="Logo" width={40} height={40} unoptimized  />
+          {/* <Box 
             sx={{ 
               width: 40, 
               height: 40, 
@@ -78,7 +81,7 @@ export default function Header({ pageTitle }: HeaderProps) {
             <Typography variant="h6" sx={{ color: 'white', fontWeight: 'bold' }}>
               R
             </Typography>
-          </Box>
+          </Box> */}
           <Typography variant="h6" sx={{ fontWeight: 600 }}>
             Rhema
           </Typography>
@@ -151,7 +154,7 @@ export default function Header({ pageTitle }: HeaderProps) {
             </Typography>
           </Box>
           <Divider />
-          <MenuItem>
+          {/* <MenuItem>
             <ListItemIcon>
               <Person fontSize="small" />
             </ListItemIcon>
@@ -162,8 +165,8 @@ export default function Header({ pageTitle }: HeaderProps) {
               <Settings fontSize="small" />
             </ListItemIcon>
             Configurações
-          </MenuItem>
-          <MenuItem>
+          </MenuItem> */}
+          <MenuItem component={Link} href="/change-password">
             <ListItemIcon>
               <Lock fontSize="small" />
             </ListItemIcon>

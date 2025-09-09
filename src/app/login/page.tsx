@@ -36,7 +36,7 @@ export default function LoginPage() {
       if (result.success) {
         router.push('/'); // Redireciona para o dashboard após login
       } else {
-        setError(result.error || 'Erro ao realizar login');
+        setError('Erro ao realizar login');
       }
     } catch (err) {
       setError('Erro ao conectar com o servidor');

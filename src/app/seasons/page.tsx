@@ -65,9 +65,6 @@ export default function SeasonsPage() {
 
   return (
     <MainLayout pageTitle="Gestão de Temporadas">
-      <Typography variant="h5" gutterBottom>
-        Gestão de Temporadas
-      </Typography>
 
       {/* Filtros */}
       <Box sx={{ mb: 4, display: 'flex', gap: 2, alignItems: 'center' }}>

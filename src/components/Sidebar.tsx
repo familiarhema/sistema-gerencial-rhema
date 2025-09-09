@@ -20,7 +20,7 @@ import {
 import {
   Dashboard,
   Assessment,
-  Bolt,
+  Badge,
   Group,
   Description,
   Settings,
@@ -31,7 +31,7 @@ import {
 const iconMap: { [key: string]: React.ReactElement } = {
   'dashboard': <Dashboard />,
   'analytics': <Assessment />,
-  'insights': <Bolt />,
+  'voluntariado': <Badge />,
   'users': <Group />,
   'reports': <Description />,
   'settings': <Settings />
@@ -46,7 +46,6 @@ export default function Sidebar({ isCollapsed, onToggle }: { isCollapsed: boolea
     <Drawer
       variant="permanent"
       sx={{
-        width: drawerWidth,
         flexShrink: 0,
         '& .MuiDrawer-paper': {
           width: drawerWidth,
@@ -82,6 +81,12 @@ export default function Sidebar({ isCollapsed, onToggle }: { isCollapsed: boolea
                   href={item.path}
                   selected={isActive}
                   sx={{
+                    "&.Mui-selected": {
+                      bgcolor: '#FF6900',
+                    },
+                    "&.Mui-selected:hover": {
+                      bgcolor: '#FF6900',
+                    },
                     minHeight: 48,
                     mx: 1,
                     my: 0.5,
@@ -125,7 +130,7 @@ export default function Sidebar({ isCollapsed, onToggle }: { isCollapsed: boolea
         })}
       </List>
 
-      {/* Help Section */}
+      {/* Help Section
       <Box sx={{ position: 'absolute', bottom: 16, left: 16, right: 16 }}>
         <Paper
           elevation={0}
@@ -164,7 +169,7 @@ export default function Sidebar({ isCollapsed, onToggle }: { isCollapsed: boolea
             )}
           </Box>
         </Paper>
-      </Box>
+      </Box> */}
     </Drawer>
   );
 }

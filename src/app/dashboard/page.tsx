@@ -3,9 +3,9 @@
 import { Box, Typography, Paper } from '@mui/material';
 import MainLayout from '@/components/MainLayout';
 
-export default function MainPage() {
+export default function DashboardPage() {
   return (
-    <MainLayout pageTitle="Home">
+    <MainLayout pageTitle="Dashboard">
       <Box sx={{ p: 4 }}>
         <Box sx={{ display: 'grid', gap: 4 }}>
           {/* Seção de Boas-vindas */}
