@@ -11,13 +11,18 @@ export async function GET(
     const name = searchParams.get('name');
     const email = searchParams.get('email');
     const ministerioId = searchParams.get('ministerioId');
+    const voluntarioNovo = searchParams.get('voluntarioNovo');
+    const pendingApprove = searchParams.get('pendingApprove');
 
     // Construir URL com query params
     const queryParams = new URLSearchParams();
+    queryParams.append('pageSize', '50');
     queryParams.append('page', page);
-    if (name) queryParams.append('name', name);
+    if (name) queryParams.append('nome', name);
     if (email) queryParams.append('email', email);
     if (ministerioId) queryParams.append('ministerioId', ministerioId);
+    if (voluntarioNovo) queryParams.append('voluntarioNovo', voluntarioNovo);
+    if (pendingApprove) queryParams.append('pendingApprove', pendingApprove);
 
     const { id } = await params;
 

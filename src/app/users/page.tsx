@@ -82,9 +82,6 @@ export default function UsersPage() {
     <MainLayout pageTitle="Gestão de Usuários">
       <Box sx={{ p: 4 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-          <Typography variant="h5" component="h1">
-            Gestão de Usuários
-          </Typography>
           <Button
             variant="contained"
             startIcon={<Add />}
@@ -134,7 +131,17 @@ export default function UsersPage() {
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
-              <TableRow>
+              <TableRow
+                sx={{
+                  backgroundColor: '#ff6900',
+                  '& .MuiTableCell-head': {
+                    color: 'white',
+                    fontWeight: 600,
+                    fontSize: '0.875rem',
+                    borderBottom: '2px solid rgba(255, 255, 255, 0.2)',
+                  },
+                }}
+              >
                 <TableCell>Nome</TableCell>
                 <TableCell>Email</TableCell>
                 <TableCell>Função</TableCell>
@@ -143,8 +150,16 @@ export default function UsersPage() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {users.map((user) => (
-                <TableRow key={user.id}>
+              {users.map((user, index) => (
+                <TableRow 
+                  key={user.id}
+                  sx={{
+                    backgroundColor: index % 2 === 0 ? 'transparent' : 'rgba(238, 80, 20, 0.04)',
+                    '&:hover': {
+                      backgroundColor: 'rgba(238, 80, 20, 0.08)',
+                    },
+                  }}
+                >
                   <TableCell>{user.name}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{user.role.name}</TableCell>

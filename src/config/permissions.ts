@@ -31,6 +31,10 @@ const routes: RoutePermission[] = [
     allowedRoles: ['492f9cbe-c823-44fa-b53b-68bb8eae6140', 'ada00ec0-d060-4f41-87aa-acdac0e0ee4d']
   },
   {
+    path: '/seasons/[id]/dashboard',
+    allowedRoles: ['492f9cbe-c823-44fa-b53b-68bb8eae6140', 'ada00ec0-d060-4f41-87aa-acdac0e0ee4d']
+  },
+  {
     path: '/users',
     allowedRoles: ['492f9cbe-c823-44fa-b53b-68bb8eae6140']
   },

@@ -16,8 +16,9 @@ import {
   TableRow,
   Button,
   Typography,
+  IconButton,
 } from '@mui/material';
-import { Visibility } from '@mui/icons-material';
+import { Visibility, Dashboard } from '@mui/icons-material';
 import { fetchApi } from '@/services/api';
 import MainLayout from '@/components/MainLayout';
 
@@ -59,6 +60,10 @@ export default function SeasonsPage() {
     router.push(`/seasons/${seasonId}`);
   };
 
+  const handleViewDashboard = (seasonId: string) => {
+    router.push(`/seasons/${seasonId}/dashboard`);
+  };
+
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('pt-BR');
   };
@@ -90,7 +95,17 @@ export default function SeasonsPage() {
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
-            <TableRow>
+            <TableRow
+              sx={{
+                backgroundColor: '#ff6900',
+                '& .MuiTableCell-head': {
+                  color: 'white',
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                  borderBottom: '2px solid rgba(255, 255, 255, 0.2)',
+                },
+              }}
+            >
               <TableCell>Nome</TableCell>
               <TableCell>Data Início</TableCell>
               <TableCell>Data Fim</TableCell>
@@ -99,19 +114,27 @@ export default function SeasonsPage() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {seasons.map((season) => (
-              <TableRow key={season.id}>
+            {seasons.map((season, index) => (
+              <TableRow 
+                key={season.id}
+                sx={{
+                  backgroundColor: index % 2 === 0 ? 'transparent' : 'rgba(238, 80, 20, 0.04)',
+                  '&:hover': {
+                    backgroundColor: 'rgba(238, 80, 20, 0.08)',
+                  },
+                }}
+              >
                 <TableCell>{season.name}</TableCell>
                 <TableCell>{formatDate(season.dataInicio)}</TableCell>
                 <TableCell>{formatDate(season.dataFim)}</TableCell>
                 <TableCell>{season.active ? 'Ativa' : 'Inativa'}</TableCell>
                 <TableCell align="right">
-                  <Button
-                    startIcon={<Visibility />}
-                    onClick={() => handleViewSeason(season.id)}
-                  >
-                    Visualizar
-                  </Button>
+                  <IconButton color="primary" onClick={() => handleViewSeason(season.id)}>
+                    <Visibility />
+                  </IconButton>
+                  <IconButton color="primary" onClick={() => handleViewDashboard(season.id)}>
+                    <Dashboard />
+                  </IconButton>
                 </TableCell>
               </TableRow>
             ))}
