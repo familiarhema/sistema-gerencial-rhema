@@ -18,7 +18,7 @@ import {
   Typography,
   IconButton,
 } from '@mui/material';
-import { Visibility, Dashboard } from '@mui/icons-material';
+import { Visibility, Dashboard, Assessment } from '@mui/icons-material';
 import { fetchApi } from '@/services/api';
 import MainLayout from '@/components/MainLayout';
 
@@ -62,6 +62,10 @@ export default function SeasonsPage() {
 
   const handleViewDashboard = (seasonId: string) => {
     router.push(`/seasons/${seasonId}/dashboard`);
+  };
+
+  const handleViewReports = (seasonId: string) => {
+    router.push(`/seasons/${seasonId}/reports`);
   };
 
   const formatDate = (date: string) => {
@@ -134,6 +138,9 @@ export default function SeasonsPage() {
                   </IconButton>
                   <IconButton color="primary" onClick={() => handleViewDashboard(season.id)}>
                     <Dashboard />
+                  </IconButton>
+                  <IconButton color="primary" onClick={() => handleViewReports(season.id)}>
+                    <Assessment />
                   </IconButton>
                 </TableCell>
               </TableRow>

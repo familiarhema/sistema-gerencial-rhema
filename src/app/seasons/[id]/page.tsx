@@ -28,8 +28,10 @@ import {
   Checkbox,
   FormControlLabel,
   CircularProgress,
+  Tooltip,
+  Chip,
 } from '@mui/material';
-import { ArrowBack, CheckCircle, Delete, FileDownload, Edit } from '@mui/icons-material';
+import { ArrowBack, CheckCircle, Delete, FileDownload, Edit, Block, Info, Cancel } from '@mui/icons-material';
 import { fetchApi } from '@/services/api';
 import MainLayout from '@/components/MainLayout';
 import EditVolunteerModal from './EditVolunteerModal';
@@ -58,6 +60,7 @@ interface Volunteer {
   phone: string;
   status: string;
   registration_date: string;
+  birth_date: string;
   new_phone: string;
   new_email: string;
   cell_name: string;
@@ -67,6 +70,8 @@ interface Volunteer {
   new_ministeries: VolunteerMinistry[];
   is_new_volunteer: boolean;
   startServicedAt: number;
+  blockedManager: boolean;
+  reason?: string;
 }
 
 interface VolunteersResponse {
@@ -89,11 +94,20 @@ export default function SeasonPage({ params }: { params: Promise<{ id: string }>
   const [ministryFilter, setMinistryFilter] = useState('');
   const [voluntarioNovoFilter, setVoluntarioNovoFilter] = useState<boolean | null>(null);
   const [pendingApproveFilter, setPendingApproveFilter] = useState<boolean | null>(null);
+  const [blockedManagerFilter, setBlockedManagerFilter] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedVolunteer, setSelectedVolunteer] = useState<Volunteer | null>(null);
   const [selectedVolunteerToRemove, setSelectedVolunteerToRemove] = useState<Volunteer | null>(null);
   const [openConfirmModal, setOpenConfirmModal] = useState(false);
   const [seasonId, setSeasonId] = useState<string>('');
+  const [batchApprovalEnabled, setBatchApprovalEnabled] = useState(false);
+  const [selectedVolunteers, setSelectedVolunteers] = useState<string[]>([]);
+  const [openBatchApprovalModal, setOpenBatchApprovalModal] = useState(false);
+  const [selectedVolunteerToBlock, setSelectedVolunteerToBlock] = useState<Volunteer | null>(null);
+  const [openBlockModal, setOpenBlockModal] = useState(false);
+  const [blockReason, setBlockReason] = useState('');
+  const [selectedMinistryForApproval, setSelectedMinistryForApproval] = useState<{ volunteer: Volunteer; ministry: VolunteerMinistry } | null>(null);
+  const [openMinistryApprovalModal, setOpenMinistryApprovalModal] = useState(false);
 
   useEffect(() => {
     const getParams = async () => {
@@ -146,6 +160,7 @@ export default function SeasonPage({ params }: { params: Promise<{ id: string }>
       if (ministryFilter) queryParams.append('ministerioId', ministryFilter);
       if (voluntarioNovoFilter !== null) queryParams.append('voluntarioNovo', voluntarioNovoFilter.toString());
       if (pendingApproveFilter !== null) queryParams.append('pendingApprove', pendingApproveFilter.toString());
+      if (blockedManagerFilter !== null) queryParams.append('blockedManager', blockedManagerFilter.toString());
 
       const { id } = await params;
 
@@ -185,6 +200,7 @@ export default function SeasonPage({ params }: { params: Promise<{ id: string }>
       if (ministryFilter) initialQueryParams.append('ministerioId', ministryFilter);
       if (voluntarioNovoFilter !== null) initialQueryParams.append('voluntarioNovo', voluntarioNovoFilter.toString());
       if (pendingApproveFilter !== null) initialQueryParams.append('pendingApprove', pendingApproveFilter.toString());
+      if (blockedManagerFilter !== null) initialQueryParams.append('blockedManager', blockedManagerFilter.toString());
 
       const initialResponse = await fetchApi<VolunteersResponse>(`volunteers/season/${id}?${initialQueryParams.toString()}`);
       
@@ -206,6 +222,7 @@ export default function SeasonPage({ params }: { params: Promise<{ id: string }>
         if (ministryFilter) queryParams.append('ministerioId', ministryFilter);
         if (voluntarioNovoFilter !== null) queryParams.append('voluntarioNovo', voluntarioNovoFilter.toString());
         if (pendingApproveFilter !== null) queryParams.append('pendingApprove', pendingApproveFilter.toString());
+        if (blockedManagerFilter !== null) queryParams.append('blockedManager', blockedManagerFilter.toString());
 
         const response = await fetchApi<VolunteersResponse>(`volunteers/season/${id}?${queryParams.toString()}`);
         
@@ -221,9 +238,12 @@ export default function SeasonPage({ params }: { params: Promise<{ id: string }>
         'Telefone': volunteer.new_phone,
         'Status': volunteer.status,
         'Data de Registro': formatDate(volunteer.registration_date),
+        'Data de Nascimento': formatDate(volunteer.birth_date),
         'Célula': volunteer.cell_name,
-        'Novo Voluntário': volunteer.new_cell ? 'Sim' : 'Não',
-        'Ministérios': volunteer.new_ministeries?.map(m => m.name).join(', ') || ''
+        'Novo Voluntário': volunteer.is_new_volunteer ? 'Sim' : 'Não',
+        'Ministérios': volunteer.new_ministeries?.map(m => m.name).join(', ') || '',
+        'Bloqueado': volunteer.blockedManager ? 'Sim' : 'Não',
+        'Motivo do Bloqueio': volunteer.reason || ''
       }));
 
       // Criar workbook e worksheet
@@ -237,9 +257,12 @@ export default function SeasonPage({ params }: { params: Promise<{ id: string }>
         { wch: 15 }, // Telefone
         { wch: 10 }, // Status
         { wch: 15 }, // Data de Registro
+        { wch: 20 }, // Data de Nascimento
         { wch: 20 }, // Célula
         { wch: 15 }, // Novo Voluntário
-        { wch: 40 }  // Ministérios
+        { wch: 40 }, // Ministérios
+        { wch: 10 }, // Bloqueado
+        { wch: 30 }  // Motivo do Bloqueio
       ];
       ws['!cols'] = colWidths;
 
@@ -257,6 +280,8 @@ export default function SeasonPage({ params }: { params: Promise<{ id: string }>
 
   const handleFilter = () => {
     setPage(0); // Resetar para primeira página
+    setBatchApprovalEnabled(!!ministryFilter); // Habilitar apenas se ministério foi selecionado
+    setSelectedVolunteers([]); // Limpar seleções ao filtrar
     fetchVolunteers();
   };
 
@@ -298,6 +323,115 @@ export default function SeasonPage({ params }: { params: Promise<{ id: string }>
     setSelectedVolunteerToRemove(null);
   };
 
+  const handleVolunteerSelection = (volunteerId: string) => {
+    setSelectedVolunteers(prev => 
+      prev.includes(volunteerId) 
+        ? prev.filter(id => id !== volunteerId)
+        : [...prev, volunteerId]
+    );
+  };
+
+  const handleBatchApproval = async () => {
+    if (!ministryFilter || selectedVolunteers.length === 0) return;
+
+    try {
+      await fetchApi(`volunteers/season/${seasonId}/ministry/${ministryFilter}/approve`, {
+        method: 'POST',
+        body: JSON.stringify({ volunteerIds: selectedVolunteers }),
+      });
+
+      // Limpar seleções e fechar modal
+      setSelectedVolunteers([]);
+      setOpenBatchApprovalModal(false);
+      
+      // Recarregar a tabela
+      fetchVolunteers();
+    } catch (error) {
+      console.error('Erro ao aprovar voluntários em lote:', error);
+    }
+  };
+
+  const handleCloseBatchApprovalModal = () => {
+    setOpenBatchApprovalModal(false);
+  };
+
+  const handleBlockVolunteer = (volunteer: Volunteer) => {
+    setSelectedVolunteerToBlock(volunteer);
+    setOpenBlockModal(true);
+  };
+
+  const handleConfirmBlock = async () => {
+    if (!selectedVolunteerToBlock || !blockReason.trim()) return;
+
+    try {
+      const { id } = await params;
+      await fetchApi(`volunteers/${selectedVolunteerToBlock.id}/season/${id}/block`, {
+        method: 'PUT',
+        body: JSON.stringify({ reason: blockReason }),
+      });
+
+      // Recarregar a tabela
+      fetchVolunteers();
+      setOpenBlockModal(false);
+      setSelectedVolunteerToBlock(null);
+      setBlockReason('');
+    } catch (error) {
+      console.error('Erro ao bloquear voluntário:', error);
+    }
+  };
+
+  const handleCloseBlockModal = () => {
+    setOpenBlockModal(false);
+    setSelectedVolunteerToBlock(null);
+    setBlockReason('');
+  };
+
+  const handleMinistryClick = (volunteer: Volunteer, ministry: VolunteerMinistry) => {
+    if (ministry.status === 'Created') {
+      setSelectedMinistryForApproval({ volunteer, ministry });
+      setOpenMinistryApprovalModal(true);
+    }
+  };
+
+  const handleApproveMinistry = async () => {
+    if (!selectedMinistryForApproval) return;
+
+    try {
+      await fetchApi(`volunteers/${selectedMinistryForApproval.volunteer.id}/season/${seasonId}/ministry/${selectedMinistryForApproval.ministry.id}/approve`, {
+        method: 'PUT',
+      });
+
+      // Fechar modal e recarregar dados
+      setOpenMinistryApprovalModal(false);
+      setSelectedMinistryForApproval(null);
+      fetchVolunteers();
+    } catch (error) {
+      console.error('Erro ao aprovar ministério:', error);
+    }
+  };
+
+  const handleDisapproveMinistry = async () => {
+    if (!selectedMinistryForApproval) return;
+
+    try {
+      await fetchApi(`volunteers/${selectedMinistryForApproval.volunteer.id}/season/${seasonId}/ministry/${selectedMinistryForApproval.ministry.id}/disapprove`, {
+        method: 'PUT',
+      });
+
+      // Fechar modal e recarregar dados
+      setOpenMinistryApprovalModal(false);
+      setSelectedMinistryForApproval(null);
+      fetchVolunteers();
+    } catch (error) {
+      console.error('Erro ao reprovar ministério:', error);
+    }
+  };
+
+  const handleCloseMinistryApprovalModal = () => {
+    setOpenMinistryApprovalModal(false);
+    setSelectedMinistryForApproval(null);
+  };
+
   return (
     <MainLayout pageTitle="Visualizar Temporada">
       <Box>
@@ -332,7 +466,11 @@ export default function SeasonPage({ params }: { params: Promise<{ id: string }>
               <Select
                 value={ministryFilter}
                 label="Ministério"
-                onChange={(e) => setMinistryFilter(e.target.value)}
+                onChange={(e) => {
+                  setMinistryFilter(e.target.value);
+                  setBatchApprovalEnabled(false); // Desabilitar quando o combo for alterado
+                  setSelectedVolunteers([]); // Limpar seleções
+                }}
               >
                 <MenuItem value="">Todos</MenuItem>
                 {ministries.map((ministry) => (
@@ -362,6 +500,16 @@ export default function SeasonPage({ params }: { params: Promise<{ id: string }>
               }
               label="Pendente Aprovação"
             />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={blockedManagerFilter === true}
+                  onChange={(e) => setBlockedManagerFilter(e.target.checked ? true : null)}
+                  size="small"
+                />
+              }
+              label="Bloqueado"
+            />
           </Box>
 
           {/* Segunda linha: Botões alinhados à direita */}
@@ -382,6 +530,18 @@ export default function SeasonPage({ params }: { params: Promise<{ id: string }>
             >
               Exportar Excel
             </Button>
+            {batchApprovalEnabled && (
+              <Button
+                variant="contained"
+                startIcon={<CheckCircle />}
+                onClick={() => setOpenBatchApprovalModal(true)}
+                size="small"
+                color="success"
+                disabled={selectedVolunteers.length === 0}
+              >
+                Aprovar Selecionados ({selectedVolunteers.length})
+              </Button>
+            )}
           </Box>
         </Paper>
 
@@ -400,11 +560,13 @@ export default function SeasonPage({ params }: { params: Promise<{ id: string }>
                   },
                 }}
               >
+                <TableCell>Selecionar</TableCell>
                 <TableCell>Nome</TableCell>
                 <TableCell>Email</TableCell>
                 <TableCell>Telefone</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell>Data de Registro</TableCell>
+                <TableCell>Data de Nascimento</TableCell>
                 <TableCell>Ministérios</TableCell>
                 <TableCell>Voluntário Novo</TableCell>
                 <TableCell align="right">Ações</TableCell>
@@ -413,7 +575,7 @@ export default function SeasonPage({ params }: { params: Promise<{ id: string }>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={8} align="center" sx={{ py: 6 }}>
+                  <TableCell colSpan={10} align="center" sx={{ py: 6 }}>
                     <CircularProgress size={40} />
                     <Typography variant="body2" sx={{ mt: 2, color: 'text.secondary' }}>
                       Carregando voluntários...
@@ -422,7 +584,7 @@ export default function SeasonPage({ params }: { params: Promise<{ id: string }>
                 </TableRow>
               ) : volunteers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} align="center" sx={{ py: 6 }}>
+                  <TableCell colSpan={10} align="center" sx={{ py: 6 }}>
                     <Typography variant="h6" color="text.secondary">
                       Nenhum voluntário encontrado
                     </Typography>
@@ -440,18 +602,68 @@ export default function SeasonPage({ params }: { params: Promise<{ id: string }>
                       '&:hover': {
                         backgroundColor: 'rgba(238, 80, 20, 0.08)',
                       },
+                      ...(volunteer.blockedManager && {
+                        border: '2px solid #d32f2f',
+                        backgroundColor: 'rgba(211, 47, 47, 0.08)',
+                        '&:hover': {
+                          backgroundColor: 'rgba(211, 47, 47, 0.12)',
+                        },
+                      }),
                     }}
                   >
-                    <TableCell>{volunteer.name}</TableCell>
+                    <TableCell>
+                      {batchApprovalEnabled && (
+                        <Checkbox
+                          checked={selectedVolunteers.includes(volunteer.id)}
+                          onChange={() => handleVolunteerSelection(volunteer.id)}
+                          size="small"
+                        />
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        {volunteer.name}
+                        {volunteer.blockedManager && volunteer.reason && (
+                          <Tooltip title={`Motivo do bloqueio: ${volunteer.reason}`} arrow>
+                            <Info color="error" fontSize="small" />
+                          </Tooltip>
+                        )}
+                      </Box>
+                    </TableCell>
                     <TableCell>{volunteer.email}</TableCell>
                     <TableCell>{volunteer.new_phone}</TableCell>
                     <TableCell>{volunteer.status}</TableCell>
                     <TableCell>{formatDate(volunteer.registration_date)}</TableCell>
-                    <TableCell>{volunteer.new_ministeries?.filter(m => m.status !== 'Rejected').map(m => m.name).join(', ') || ''}</TableCell>
+                    <TableCell>{formatDate(volunteer.birth_date)}</TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                        {volunteer.new_ministeries?.filter(m => m.status !== 'Rejected').map((ministry, idx) => (
+                          <Chip
+                            key={idx}
+                            label={ministry.name}
+                            size="small"
+                            color={
+                              ministry.status === 'Created' ? 'warning' :
+                              ministry.status === 'Accepted' ? 'success' : 'error'
+                            }
+                            onClick={() => handleMinistryClick(volunteer, ministry)}
+                            sx={{
+                              cursor: ministry.status === 'Created' ? 'pointer' : 'default',
+                              '&:hover': ministry.status === 'Created' ? {
+                                opacity: 0.8,
+                              } : {},
+                            }}
+                          />
+                        )) || ''}
+                      </Box>
+                    </TableCell>
                     <TableCell>{volunteer.is_new_volunteer ? 'Sim' : 'Não'}</TableCell>
                     <TableCell align="right">
                       <IconButton color="primary" onClick={() => handleOpenModal(volunteer)}>
                         <Edit />
+                      </IconButton>
+                      <IconButton color="warning" onClick={() => handleBlockVolunteer(volunteer)}>
+                        <Block />
                       </IconButton>
                       <IconButton color="error" onClick={() => handleRemoveVolunteer(volunteer)}>
                         <Delete />
@@ -503,6 +715,127 @@ export default function SeasonPage({ params }: { params: Promise<{ id: string }>
             </Button>
             <Button onClick={handleConfirmRemove} color="error" variant="contained">
               Remover
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Modal de Confirmação de Aprovação em Lote */}
+        <Dialog
+          open={openBatchApprovalModal}
+          onClose={handleCloseBatchApprovalModal}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>Confirmar Aprovação em Lote</DialogTitle>
+          <DialogContent>
+            <Typography variant="body1" sx={{ mb: 2 }}>
+              Você está prestes a aprovar {selectedVolunteers.length} voluntário(s) para o ministério selecionado.
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Voluntários que serão aprovados:
+            </Typography>
+            <Box sx={{ maxHeight: 200, overflow: 'auto', border: '1px solid #e0e0e0', borderRadius: 1, p: 1 }}>
+              {selectedVolunteers.map(volunteerId => {
+                const volunteer = volunteers.find(v => v.id === volunteerId);
+                return volunteer ? (
+                  <Typography key={volunteerId} variant="body2" sx={{ py: 0.5 }}>
+                    • {volunteer.name}
+                  </Typography>
+                ) : null;
+              })}
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseBatchApprovalModal} color="primary">
+              Cancelar
+            </Button>
+            <Button onClick={handleBatchApproval} color="success" variant="contained">
+              Confirmar Aprovação
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Modal de Bloqueio de Voluntário */}
+        <Dialog
+          open={openBlockModal}
+          onClose={handleCloseBlockModal}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>Bloquear Voluntário</DialogTitle>
+          <DialogContent>
+            <Typography variant="body1" sx={{ mb: 2 }}>
+              Você está prestes a bloquear o voluntário "{selectedVolunteerToBlock?.name}".
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Informe o motivo do bloqueio:
+            </Typography>
+            <TextField
+              autoFocus
+              margin="dense"
+              label="Motivo do bloqueio"
+              fullWidth
+              multiline
+              rows={4}
+              value={blockReason}
+              onChange={(e) => setBlockReason(e.target.value)}
+              variant="outlined"
+              placeholder="Digite o motivo do bloqueio..."
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseBlockModal} color="primary">
+              Cancelar
+            </Button>
+            <Button 
+              onClick={handleConfirmBlock} 
+              color="warning" 
+              variant="contained"
+              disabled={!blockReason.trim()}
+            >
+              Confirmar Bloqueio
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Modal de Aprovação/Reprovação de Ministério */}
+        <Dialog
+          open={openMinistryApprovalModal}
+          onClose={handleCloseMinistryApprovalModal}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>Aprovar ou Reprovar Ministério</DialogTitle>
+          <DialogContent>
+            <Typography variant="body1" sx={{ mb: 2 }}>
+              Voluntário: <strong>{selectedMinistryForApproval?.volunteer.name}</strong>
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 2 }}>
+              Ministério: <strong>{selectedMinistryForApproval?.ministry.name}</strong>
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Escolha uma ação para este ministério:
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseMinistryApprovalModal} color="primary">
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleDisapproveMinistry}
+              color="error"
+              variant="contained"
+              startIcon={<Cancel />}
+            >
+              Reprovar
+            </Button>
+            <Button
+              onClick={handleApproveMinistry}
+              color="success"
+              variant="contained"
+              startIcon={<CheckCircle />}
+            >
+              Aprovar
             </Button>
           </DialogActions>
         </Dialog>
