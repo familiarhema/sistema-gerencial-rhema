@@ -16,11 +16,11 @@ const publicRoutes = ['/unauthorized', '/login'];
 const routes: RoutePermission[] = [
   {
     path: '/',
-    allowedRoles: ['492f9cbe-c823-44fa-b53b-68bb8eae6140', 'ada00ec0-d060-4f41-87aa-acdac0e0ee4d', 'daf9e273-8781-45d1-b1ea-00a76b3d1799'] // ID do role Administrador
+    allowedRoles: ['492f9cbe-c823-44fa-b53b-68bb8eae6140', 'ada00ec0-d060-4f41-87aa-acdac0e0ee4d', 'daf9e273-8781-45d1-b1ea-00a76b3d1799', '39c05d7e-5d86-4f75-9800-f8bb48bf5dac'] // ID do role Administrador
   },
   {
     path: '/dashboard',
-    allowedRoles: ['492f9cbe-c823-44fa-b53b-68bb8eae6140', 'ada00ec0-d060-4f41-87aa-acdac0e0ee4d', 'daf9e273-8781-45d1-b1ea-00a76b3d1799'] // ID do role Administrador
+    allowedRoles: ['492f9cbe-c823-44fa-b53b-68bb8eae6140', 'ada00ec0-d060-4f41-87aa-acdac0e0ee4d', 'daf9e273-8781-45d1-b1ea-00a76b3d1799', '39c05d7e-5d86-4f75-9800-f8bb48bf5dac'] // ID do role Administrador
   },
   {
     path: '/seasons',
@@ -35,6 +35,10 @@ const routes: RoutePermission[] = [
     allowedRoles: ['492f9cbe-c823-44fa-b53b-68bb8eae6140', 'ada00ec0-d060-4f41-87aa-acdac0e0ee4d']
   },
   {
+    path: '/seasons/[id]/checkin',
+    allowedRoles: ['492f9cbe-c823-44fa-b53b-68bb8eae6140', 'ada00ec0-d060-4f41-87aa-acdac0e0ee4d']
+  },
+  {
     path: '/seasons/[id]/dashboard',
     allowedRoles: ['492f9cbe-c823-44fa-b53b-68bb8eae6140', 'ada00ec0-d060-4f41-87aa-acdac0e0ee4d']
   },
@@ -44,7 +48,15 @@ const routes: RoutePermission[] = [
   },
   {
     path: '/change-password',
-    allowedRoles: ['492f9cbe-c823-44fa-b53b-68bb8eae6140', 'ada00ec0-d060-4f41-87aa-acdac0e0ee4d', 'daf9e273-8781-45d1-b1ea-00a76b3d1799'] // ID do role Administrador
+    allowedRoles: ['492f9cbe-c823-44fa-b53b-68bb8eae6140', 'ada00ec0-d060-4f41-87aa-acdac0e0ee4d', 'daf9e273-8781-45d1-b1ea-00a76b3d1799', '39c05d7e-5d86-4f75-9800-f8bb48bf5dac'] // ID do role Administrador
+  },
+  {
+    path: '/kids/events',
+    allowedRoles: ['492f9cbe-c823-44fa-b53b-68bb8eae6140', '39c05d7e-5d86-4f75-9800-f8bb48bf5dac']
+  },
+  {
+    path: '/kids/events/[id]',
+    allowedRoles: ['492f9cbe-c823-44fa-b53b-68bb8eae6140', '39c05d7e-5d86-4f75-9800-f8bb48bf5dac']
   }
 ];
 
@@ -66,6 +78,20 @@ const menuItems: MenuItem[] = [
     label: 'Voluntariado',
     path: '/seasons',
     allowedRoles: ['492f9cbe-c823-44fa-b53b-68bb8eae6140', 'ada00ec0-d060-4f41-87aa-acdac0e0ee4d']
+  },
+  {
+    id: 'kids',
+    label: 'Kids',
+    path: '/kids',
+    allowedRoles: ['492f9cbe-c823-44fa-b53b-68bb8eae6140', '39c05d7e-5d86-4f75-9800-f8bb48bf5dac'],
+    children: [
+      {
+        id: 'kids-events',
+        label: 'Eventos',
+        path: '/kids/events',
+        allowedRoles: ['492f9cbe-c823-44fa-b53b-68bb8eae6140', '39c05d7e-5d86-4f75-9800-f8bb48bf5dac']
+      }
+    ]
   }
 ];
   // {

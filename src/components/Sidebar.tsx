@@ -26,6 +26,9 @@ import {
   Settings,
   ChevronLeft,
   Help,
+  ExpandLess,
+  ExpandMore,
+  ChildCare,
 } from '@mui/icons-material';
 
 const iconMap: { [key: string]: React.ReactElement } = {
@@ -34,13 +37,24 @@ const iconMap: { [key: string]: React.ReactElement } = {
   'voluntariado': <Badge />,
   'users': <Group />,
   'reports': <Description />,
-  'settings': <Settings />
+  'settings': <Settings />,
+  'kids': <ChildCare />,
+  'kids-events': <Description />
 };
 
 export default function Sidebar({ isCollapsed, onToggle }: { isCollapsed: boolean; onToggle: () => void }) {
   const pathname = usePathname();
   const drawerWidth = isCollapsed ? 64 : 256;
   const { allowedMenuItems, loading } = usePermissions();
+  const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
+
+  const handleToggleSubmenu = (menuId: string) => {
+    setExpandedMenus(prev => 
+      prev.includes(menuId) 
+        ? prev.filter(id => id !== menuId)
+        : [...prev, menuId]
+    );
+  };
 
   return (
     <Drawer
@@ -67,65 +81,139 @@ export default function Sidebar({ isCollapsed, onToggle }: { isCollapsed: boolea
       <List>
         {allowedMenuItems.map((item) => {
           const isActive = pathname === item.path;
-          const icon = iconMap[item.id];
+          const hasChildren = item.children && item.children.length > 0;
+          const isExpanded = expandedMenus.includes(item.id);
 
           return (
-            <ListItem key={item.path} disablePadding>
-              <Tooltip 
-                title={isCollapsed ? item.label : ''}
-                placement="right"
-                arrow
-              >
-                <ListItemButton
-                  component={Link}
-                  href={item.path}
-                  selected={isActive}
-                  sx={{
-                    "&.Mui-selected": {
-                      bgcolor: '#FF6900',
-                    },
-                    "&.Mui-selected:hover": {
-                      bgcolor: '#FF6900',
-                    },
-                    minHeight: 48,
-                    mx: 1,
-                    my: 0.5,
-                    px: 2.5,
-                    borderRadius: 2,
-                    ...(isActive && {
-                      bgcolor: '#FF6900',
-                      color: 'white',
-                      '&:hover': {
+            <React.Fragment key={item.path}>
+              <ListItem disablePadding>
+                <Tooltip 
+                  title={isCollapsed ? item.label : ''}
+                  placement="right"
+                  arrow
+                >
+                  <ListItemButton
+                    component={hasChildren ? 'div' : Link}
+                    href={hasChildren ? undefined : item.path}
+                    selected={isActive}
+                    onClick={hasChildren ? () => handleToggleSubmenu(item.id) : undefined}
+                    sx={{
+                      "&.Mui-selected": {
                         bgcolor: '#FF6900',
                       },
-                      '& .MuiListItemIcon-root': {
-                        color: 'white',
+                      "&.Mui-selected:hover": {
+                        bgcolor: '#FF6900',
                       },
-                    }),
-                  }}
-                >
-                  <ListItemIcon
-                    sx={{
-                      minWidth: 0,
-                      mr: isCollapsed ? 0 : 2,
-                      justifyContent: 'center',
-                      color: isActive ? 'white' : 'text.secondary',
+                      minHeight: 48,
+                      mx: 1,
+                      my: 0.5,
+                      px: 2.5,
+                      borderRadius: 2,
+                      ...(isActive && {
+                        bgcolor: '#FF6900',
+                        color: 'white',
+                        '&:hover': {
+                          bgcolor: '#FF6900',
+                        },
+                        '& .MuiListItemIcon-root': {
+                          color: 'white',
+                        },
+                      }),
                     }}
                   >
-                    {iconMap[item.id]}
-                  </ListItemIcon>
-                  {!isCollapsed && (
-                    <ListItemText
-                      primary={item.label}
-                      primaryTypographyProps={{
-                        fontSize: '0.875rem',
-                        fontWeight: 500,
+                    <ListItemIcon
+                      sx={{
+                        minWidth: 0,
+                        mr: isCollapsed ? 0 : 2,
+                        justifyContent: 'center',
+                        color: isActive ? 'white' : 'text.secondary',
                       }}
-                    />
-                  )}
-                </ListItemButton>
-              </Tooltip>
-            </ListItem>
+                    >
+                      {iconMap[item.id]}
+                    </ListItemIcon>
+                    {!isCollapsed && (
+                      <>
+                        <ListItemText
+                          primary={item.label}
+                          primaryTypographyProps={{
+                            fontSize: '0.875rem',
+                            fontWeight: 500,
+                          }}
+                        />
+                        {hasChildren && (
+                          <Box sx={{ ml: 'auto' }}>
+                            {isExpanded ? <ExpandLess /> : <ExpandMore />}
+                          </Box>
+                        )}
+                      </>
+                    )}
+                  </ListItemButton>
+                </Tooltip>
+              </ListItem>
+              {hasChildren && isExpanded && !isCollapsed && (
+                <List component="div" disablePadding>
+                  {item.children!.map((child) => {
+                    const childIsActive = pathname === child.path;
+                    return (
+                      <ListItem key={child.path} disablePadding sx={{ pl: 4 }}>
+                        <Tooltip 
+                          title={isCollapsed ? child.label : ''}
+                          placement="right"
+                          arrow
+                        >
+                          <ListItemButton
+                            component={Link}
+                            href={child.path}
+                            selected={childIsActive}
+                            sx={{
+                              "&.Mui-selected": {
+                                bgcolor: '#FF6900',
+                              },
+                              "&.Mui-selected:hover": {
+                                bgcolor: '#FF6900',
+                              },
+                              minHeight: 40,
+                              mx: 1,
+                              my: 0.25,
+                              px: 2.5,
+                              borderRadius: 2,
+                              ...(childIsActive && {
+                                bgcolor: '#FF6900',
+                                color: 'white',
+                                '&:hover': {
+                                  bgcolor: '#FF6900',
+                                },
+                                '& .MuiListItemIcon-root': {
+                                  color: 'white',
+                                },
+                              }),
+                            }}
+                          >
+                            <ListItemIcon
+                              sx={{
+                                minWidth: 0,
+                                mr: 2,
+                                justifyContent: 'center',
+                                color: childIsActive ? 'white' : 'text.secondary',
+                              }}
+                            >
+                              {iconMap[child.id]}
+                            </ListItemIcon>
+                            <ListItemText
+                              primary={child.label}
+                              primaryTypographyProps={{
+                                fontSize: '0.8rem',
+                                fontWeight: 400,
+                              }}
+                            />
+                          </ListItemButton>
+                        </Tooltip>
+                      </ListItem>
+                    );
+                  })}
+                </List>
+              )}
+            </React.Fragment>
           );
         })}
       </List>

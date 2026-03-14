@@ -14,6 +14,7 @@ export async function GET(
     const voluntarioNovo = searchParams.get('voluntarioNovo');
     const pendingApprove = searchParams.get('pendingApprove');
     const blockedManager = searchParams.get('blockedManager');
+    const attendedVolunteersDay = searchParams.get('attendedVolunteersDay');
 
 
     // Construir URL com query params
@@ -26,6 +27,7 @@ export async function GET(
     if (voluntarioNovo) queryParams.append('voluntarioNovo', voluntarioNovo);
     if (pendingApprove) queryParams.append('pendingApprove', pendingApprove);
     if (blockedManager) queryParams.append('blockedManager', blockedManager);
+    if (attendedVolunteersDay) queryParams.append('attendedVolunteersDay', attendedVolunteersDay);
 
     const { id } = await params;
 
