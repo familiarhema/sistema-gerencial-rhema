@@ -28,6 +28,7 @@ interface VolunteerMinistry {
   status: string;
   id: number;
   name: string;
+  principal?: boolean;
 }
 
 interface ActiveCell {
@@ -249,9 +250,34 @@ export default function EditVolunteerModal({
                       </Box>
                     ) : null
                   }
+                  sx={{
+                    ...(ministry.principal && {
+                      backgroundColor: 'rgba(255, 105, 0, 0.08)',
+                      borderLeft: '4px solid #ff6900',
+                    }),
+                  }}
                 >
                   <ListItemText
-                    primary={ministry.name}
+                    primary={
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Typography sx={{ fontWeight: ministry.principal ? 'bold' : 'normal' }}>
+                          {ministry.name}
+                        </Typography>
+                        {ministry.principal && (
+                          <Chip
+                            label="PRINCIPAL"
+                            size="small"
+                            sx={{
+                              backgroundColor: '#ff6900',
+                              color: 'white',
+                              fontWeight: 'bold',
+                              fontSize: '0.65rem',
+                              height: '20px',
+                            }}
+                          />
+                        )}
+                      </Box>
+                    }
                     secondary={
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
                         <Chip

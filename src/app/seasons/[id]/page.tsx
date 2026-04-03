@@ -51,6 +51,7 @@ interface VolunteerMinistry {
   status: string;
   id: number;
   name: string;
+  principal?: boolean;
 }
 
 interface Volunteer {
@@ -241,7 +242,7 @@ export default function SeasonPage({ params }: { params: Promise<{ id: string }>
         'Data de Nascimento': formatDate(volunteer.birth_date),
         'Célula': volunteer.cell_name,
         'Novo Voluntário': volunteer.is_new_volunteer ? 'Sim' : 'Não',
-        'Ministérios': volunteer.new_ministeries?.map(m => m.name).join(', ') || '',
+        'Ministérios': volunteer.new_ministeries?.map(m => m.principal ? `${m.name} (PRINCIPAL)` : m.name).join(', ') || '',
         'Bloqueado': volunteer.blockedManager ? 'Sim' : 'Não',
         'Motivo do Bloqueio': volunteer.reason || ''
       }));
@@ -638,22 +639,40 @@ export default function SeasonPage({ params }: { params: Promise<{ id: string }>
                     <TableCell>
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                         {volunteer.new_ministeries?.filter(m => m.status !== 'Rejected').map((ministry, idx) => (
-                          <Chip
-                            key={idx}
-                            label={ministry.name}
-                            size="small"
-                            color={
-                              ministry.status === 'Created' ? 'warning' :
-                              ministry.status === 'Accepted' ? 'success' : 'error'
-                            }
-                            onClick={() => handleMinistryClick(volunteer, ministry)}
-                            sx={{
-                              cursor: ministry.status === 'Created' ? 'pointer' : 'default',
-                              '&:hover': ministry.status === 'Created' ? {
-                                opacity: 0.8,
-                              } : {},
-                            }}
-                          />
+                          <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                            <Chip
+                              label={ministry.name}
+                              size="small"
+                              color={
+                                ministry.status === 'Created' ? 'warning' :
+                                ministry.status === 'Accepted' ? 'success' : 'error'
+                              }
+                              onClick={() => handleMinistryClick(volunteer, ministry)}
+                              sx={{
+                                cursor: ministry.status === 'Created' ? 'pointer' : 'default',
+                                '&:hover': ministry.status === 'Created' ? {
+                                  opacity: 0.8,
+                                } : {},
+                                ...(ministry.principal && {
+                                  fontWeight: 'bold',
+                                  border: '2px solid #ff6900',
+                                }),
+                              }}
+                            />
+                            {ministry.principal && (
+                              <Chip
+                                label="PRINCIPAL"
+                                size="small"
+                                sx={{
+                                  backgroundColor: '#ff6900',
+                                  color: 'white',
+                                  fontWeight: 'bold',
+                                  fontSize: '0.65rem',
+                                  height: '20px',
+                                }}
+                              />
+                            )}
+                          </Box>
                         )) || ''}
                       </Box>
                     </TableCell>
